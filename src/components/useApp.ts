@@ -8,6 +8,7 @@ export interface AppData {
   credits: { source: string; balance: number; ok: boolean; error?: string };
   evidenceBackend: "moss" | "local";
   llm: "bedrock" | "moss" | "none";
+  band?: { configured: boolean; roles: Record<string, boolean>; missing: string[] };
 }
 
 export function useApp() {

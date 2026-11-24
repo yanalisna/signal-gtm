@@ -12,6 +12,7 @@ import { Graph } from "@/components/steps/Graph";
 import { Leads } from "@/components/steps/Leads";
 import { Outreach } from "@/components/steps/Outreach";
 import { Pipeline } from "@/components/steps/Pipeline";
+import { Band } from "@/components/steps/Band";
 
 const TABS = [
   { id: "intake", label: "1 Intake", C: Intake },
@@ -21,6 +22,7 @@ const TABS = [
   { id: "leads", label: "5–6 Score & enrich", C: Leads },
   { id: "outreach", label: "7 Outreach", C: Outreach },
   { id: "pipeline", label: "8 Pipeline", C: Pipeline },
+  { id: "band", label: "Band agents", C: Band },
 ];
 
 function done(id: string, d: AppData): boolean {
@@ -32,6 +34,7 @@ function done(id: string, d: AppData): boolean {
     case "graph": return s.usage.graph_queries > 0;
     case "leads": return Object.keys(s.scores).length > 0 && s.leads.length > 0;
     case "outreach": return s.drafts.some((x) => x.status === "sent");
+    case "band": return (s.bandLog ?? []).length > 0;
     case "pipeline": return s.events.some((e) => e.actor !== "AI" && e.to !== "Contacted");
     default: return false;
   }

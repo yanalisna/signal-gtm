@@ -138,6 +138,14 @@ export interface AuditEntry {
   detail?: string;
 }
 
+export interface BandLogEntry {
+  ts: string;
+  from: string; // agent role name or human name
+  kind: "message" | "thought" | "task" | "approval" | "error";
+  content: string;
+  to?: string[];
+}
+
 export interface AppState {
   product?: { description: string; criteria: Criteria };
   icp?: ICP;
@@ -156,4 +164,8 @@ export interface AppState {
   localCredits: number;
   /** leads_enriched events metered to Flexprice; subtracted from the wallet's granted credits (Flexprice has no direct debit API). */
   flexpriceConsumed?: number;
+  /** Mirror of what the Band agents posted (and human approvals received) for the in-app stream. */
+  bandLog?: BandLogEntry[];
+  /** Band message ids already processed as approvals. */
+  bandSeen?: string[];
 }
