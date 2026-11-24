@@ -1,0 +1,12 @@
+{
+  "_readme": "Fill in your team's REAL past employers and people you know, so warm-intro paths in the graph are real. previous_employers: companies a team member worked at. contacts: people you know; current_company is where they work now; previous_company (optional) is where you worked together. Use real company domains where possible (e.g. nvidia.com) so they match discovered target companies.",
+  "team": [
+    {
+      "id": "yana",
+      "name": "Yana",
+      "role": "Product Manager",
+      "previous_employers": [],
+      "contacts": []
+    }
+  ]
+}
