@@ -48,7 +48,7 @@ export const POST = route("discovery", async () => {
     maxTokens: 8000,
     system: `You are a B2B research analyst. Extract real target companies (the subject of the news, never the publisher or an investor) that match the ICP.
 Only make claims that are directly stated in the given search result content, and cite the exact result URL. Never invent URLs.
-Flag negative signals (layoffs, shutdown, acquisition closing, bankruptcy, hiring freeze, or anything in the ICP's negative signals list) in "negativeSignal".`,
+Set "negativeSignal" ONLY when a search result explicitly states a negative event about that company (layoffs, shutdown, bankruptcy, hiring freeze, acquisition closing, or an item from the ICP's negative-signal list). Never set it from assumptions, reputation or missing information; put such doubts in "fitReason" and lower "fit" instead.`,
     prompt: `ICP:\n${JSON.stringify({ summary: icp.summary, industries: icp.industries, sizeTiers: icp.sizeTiers, triggers: icp.triggers, negativeSignals: icp.negativeSignals })}
 
 Our product: ${s.product.description}
@@ -56,7 +56,7 @@ Our product: ${s.product.description}
 Search results (JSON):
 ${JSON.stringify(results.map((r, i) => ({ i, url: r.url, title: r.title, content: r.content.slice(0, 900), published: r.published_date })))}
 
-Return up to 10 distinct companies, best fit first, as:
+Return 8-10 distinct companies if the results support them (fewer only if not), best fit first, as:
 {"companies":[{"name":"","domain":"company.com","description":"one line","industry":"","sizeEstimate":"e.g. 50-200","fit":0.0-1.0,"fitReason":"one line vs ICP","negativeSignal":null or "reason","claims":[{"text":"short factual claim","signalType":"funding|hiring|expansion|product_launch|partnership|negative|other","url":"exact url from results","snippet":"supporting sentence copied from the content"}]}]}`,
   });
 
@@ -122,9 +122,22 @@ Return up to 10 distinct companies, best fit first, as:
       system: "You are a competitive intelligence analyst. Use only the given search results. Cite exact URLs.",
       prompt: `Our product: ${s.product.description}\n\nSearch results:\n${JSON.stringify(compResults.map((r) => ({ url: r.url, title: r.title, content: r.content.slice(0, 700) })))}\n\nReturn {"competitors":[{"name":"","url":"exact source url","positioning":"one line","overlap":"high|medium|low + why","differentiator":"how we win, one line"}]} with 4-6 vendors.`,
     });
+    const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const compNames = (comp.competitors ?? []).map((c) => norm(c.name));
+    const dropped: string[] = [];
     update((st) => {
       st.competitors = comp.competitors ?? [];
+      // A vendor on our competitor map is not a target account.
+      for (const c of st.companies) {
+        if (!c.excluded && compNames.some((n) => n.includes(norm(c.name)) || norm(c.name).includes(n))) {
+          c.excluded = "Competitor: appears on our competitor map";
+          delete st.pipeline[c.id];
+          st.events = st.events.filter((e) => e.companyId !== c.id);
+          dropped.push(c.name);
+        }
+      }
     });
+    if (dropped.length) logActivity({ step: "competitors", message: `Excluded from targets (on competitor map): ${dropped.join(", ")}` });
     logActivity({ step: "competitors", message: `Competitor map: ${comp.competitors?.length ?? 0} vendors` });
   } catch (e) {
     logActivity({ step: "competitors", message: `Competitor map failed: ${(e as Error).message}`, level: "warn" });
