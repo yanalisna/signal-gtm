@@ -227,6 +227,9 @@ export async function syncNeo4j(g = buildGraph()) {
     }
     logActivity({ step: "graph", message: `Neo4j sync: ${g.nodes.length} nodes, ${g.links.length} relationships`, latencyMs: Date.now() - t0 });
     return { synced: true };
+  } catch (e) {
+    logActivity({ step: "graph", message: `Neo4j unreachable, using in-memory graph: ${(e as Error).message}`, level: "warn" });
+    return { synced: false, reason: `Neo4j unreachable (${(e as Error).message}) — using in-memory graph.` };
   } finally {
     await session.close();
   }
