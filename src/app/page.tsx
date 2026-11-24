@@ -4,6 +4,7 @@ import { Radar, RotateCcw } from "lucide-react";
 import { useApp, post } from "@/components/useApp";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { Badge, cn } from "@/components/ui";
+import type { AppData } from "@/components/useApp";
 import { Intake } from "@/components/steps/Intake";
 import { Icp } from "@/components/steps/Icp";
 import { Discovery } from "@/components/steps/Discovery";
@@ -21,6 +22,20 @@ const TABS = [
   { id: "outreach", label: "7 Outreach", C: Outreach },
   { id: "pipeline", label: "8 Pipeline", C: Pipeline },
 ];
+
+function done(id: string, d: AppData): boolean {
+  const s = d.state;
+  switch (id) {
+    case "intake": return !!s.product;
+    case "icp": return !!s.icp;
+    case "discovery": return s.claims.length > 0 && s.claims.every((c) => c.status !== "pending");
+    case "graph": return s.usage.graph_queries > 0;
+    case "leads": return Object.keys(s.scores).length > 0 && s.leads.length > 0;
+    case "outreach": return s.drafts.some((x) => x.status === "sent");
+    case "pipeline": return s.events.some((e) => e.actor !== "AI" && e.to !== "Contacted");
+    default: return false;
+  }
+}
 
 const INTEGRATION_LABEL: Record<string, string> = {
   bedrock: "Bedrock",
@@ -68,8 +83,14 @@ export default function Home() {
                 LLM: {data.llm === "bedrock" ? "Bedrock" : data.llm === "moss" ? "Moss Inference (fallback)" : "not configured"}
               </Badge>
             </div>
+            <span className="ml-auto text-xs text-slate-500">
+              Credits{" "}
+              <Badge tone={data.credits.ok ? "green" : "red"}>
+                {data.credits.balance} · {data.credits.source === "flexprice" ? "Flexprice" : "local ledger"}
+              </Badge>
+            </span>
             <button
-              className="ml-auto inline-flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600"
+              className=" inline-flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600"
               onClick={async () => {
                 if (!confirm("Clear all companies, leads, drafts and pipeline? (Product description is kept.)")) return;
                 await post("/api/reset", { keepProduct: true });
@@ -90,6 +111,7 @@ export default function Home() {
                   tab === t.id ? "border-indigo-600 font-semibold text-indigo-700" : "border-transparent text-slate-500 hover:text-slate-800",
                 )}
               >
+                {done(t.id, data) && <span className="mr-1 text-emerald-600">✓</span>}
                 {t.label}
               </button>
             ))}

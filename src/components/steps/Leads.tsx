@@ -37,8 +37,8 @@ export function Leads({ data, refresh, go }: StepProps) {
         title="5–6 · Scoring & enrichment"
         actions={
           <>
-            <Button size="sm" variant="secondary" onClick={() => run("score", "/api/score")} loading={loading === "score"}>
-              Re-score
+            <Button size="sm" variant="secondary" onClick={() => run("score", "/api/score")} loading={loading === "score"} disabled={!s.companies.length}>
+              {rows.length ? "Re-score" : "Score leads"}
             </Button>
             <Button size="sm" onClick={() => run("enrich", "/api/enrich").then(() => post("/api/score")).then(refresh)} loading={loading === "enrich"} disabled={!rows.length}>
               Enrich top 5 with Hunter
@@ -69,7 +69,7 @@ export function Leads({ data, refresh, go }: StepProps) {
       </Card>
 
       {!rows.length ? (
-        <Empty>No scores yet. Run discovery and reviewer, then “Score leads”.</Empty>
+        <Empty>No scores yet. Run Discovery and the Reviewer (tab 3), then click “Score leads”.</Empty>
       ) : (
         <Card>
           <div className="overflow-x-auto">
