@@ -5,7 +5,7 @@ import type { Activity, AppState, AuditEntry } from "./types";
 const DATA_DIR = path.join(process.cwd(), "data");
 const STATE_FILE = path.join(DATA_DIR, "state.json");
 
-export const LOCAL_CREDITS_DEFAULT = 10;
+export const LOCAL_CREDITS_DEFAULT = 3; // small on purpose so the demo hits "Top up credits"
 
 function empty(): AppState {
   return {
@@ -35,9 +35,24 @@ export function load(): AppState {
 
 export function save(state: AppState) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+  const json = JSON.stringify(state, null, 2);
   const tmp = STATE_FILE + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
-  fs.renameSync(tmp, STATE_FILE);
+  // Atomic rename first; on Windows/OneDrive the rename can hit EPERM/EBUSY
+  // while the sync client holds the file, so retry briefly then write directly.
+  for (let i = 0; i < 5; i++) {
+    try {
+      fs.writeFileSync(tmp, json);
+      fs.renameSync(tmp, STATE_FILE);
+      return;
+    } catch {
+      const until = Date.now() + 40;
+      while (Date.now() < until) {}
+    }
+  }
+  fs.writeFileSync(STATE_FILE, json);
+  try {
+    fs.unlinkSync(tmp);
+  } catch {}
 }
 
 /** Read-modify-write helper. */
@@ -55,6 +70,7 @@ export function reset(keepProduct = false) {
     fresh.product = s.product;
   }
   fresh.localCredits = s.localCredits;
+  fresh.flexpriceConsumed = s.flexpriceConsumed;
   save(fresh);
 }
 

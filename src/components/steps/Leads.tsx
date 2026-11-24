@@ -100,7 +100,16 @@ export function Leads({ data, refresh, go }: StepProps) {
                       <td className="py-3 pr-3 text-lg font-semibold">{sc.total}</td>
                       <td className="py-3 pr-3 font-mono text-xs">
                         {sc.fit} / {sc.signal} / {sc.relationship}
-                        {sc.warmPath && <div className="mt-1 font-sans text-emerald-700">warm: {sc.warmPath.join(" → ")}</div>}
+                        {sc.warmPath && (
+                          <div className="mt-1 font-sans text-emerald-700">
+                            warm: {sc.warmPath.join(" → ")}
+                            {sc.warmPathSource && (
+                              <a href={sc.warmPathSource} target="_blank" rel="noreferrer" className="ml-1 text-indigo-600 hover:underline">
+                                [source]
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="max-w-md py-3 pr-3">
                         <div>{sc.whyNow}</div>

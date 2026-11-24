@@ -50,6 +50,18 @@ export function Graph({ data, refresh }: StepProps) {
     setLoading(false);
   }
 
+  async function findWarm() {
+    setLoading(true);
+    setError(null);
+    const r = await post("/api/graph/warm");
+    if (!r.ok) {
+      setError(r.error!);
+      setLoading(false);
+      return;
+    }
+    await sync();
+  }
+
   const color = (n: GNode) => (n.team ? COLORS.Team : n.target ? COLORS.Target : COLORS[n.label] ?? "#999");
   const companies = data.state.companies.filter((c) => !c.excluded);
 
@@ -59,9 +71,14 @@ export function Graph({ data, refresh }: StepProps) {
       <Card
         title="4 · Knowledge graph & warm-intro paths"
         actions={
-          <Button size="sm" onClick={sync} loading={loading}>
-            Sync to Neo4j & find warm paths
-          </Button>
+          <>
+            <Button size="sm" variant="secondary" onClick={findWarm} loading={loading} title="Searches public web sources (Tavily) for people at target companies who previously worked at our team's past employers">
+              Find possible warm paths (public web)
+            </Button>
+            <Button size="sm" onClick={sync} loading={loading}>
+              Sync to Neo4j & find warm paths
+            </Button>
+          </>
         }
       >
         <div className="mb-3 flex flex-wrap gap-3 text-xs">
@@ -123,6 +140,21 @@ export function Graph({ data, refresh }: StepProps) {
               );
             })}
           </ul>
+          {(data.state.warmContacts ?? []).length > 0 && (
+            <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs">
+              <div className="mb-1 font-semibold text-amber-900">Possible paths, verify before use (public sources only, nobody contacted)</div>
+              <ul className="space-y-1">
+                {(data.state.warmContacts ?? []).map((w) => (
+                  <li key={w.id}>
+                    <b>{w.name}</b>, {w.title} @ {data.state.companies.find((c) => c.id === w.companyId)?.name}, ex-{w.previousEmployer}: “{w.quote.slice(0, 160)}”{" "}
+                    <a href={w.url} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">
+                      source
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <details className="mt-4 text-xs">
             <summary className="cursor-pointer text-slate-500">Cypher query used</summary>
             <pre className="mt-2 overflow-x-auto rounded bg-slate-900 p-3 text-slate-100">{result.cypher}</pre>

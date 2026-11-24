@@ -13,6 +13,8 @@ export const POST = route("scoring", async () => {
   for (const c of targets) {
     const wp = await warmPath(c.id, g);
     scores[c.id] = scoreCompany(s, c.id, wp.path);
+    const src = (s.warmContacts ?? []).find((w) => w.companyId === c.id && wp.path?.some((n) => n.startsWith(w.name)));
+    if (src) scores[c.id].warmPathSource = src.url;
   }
   update((st) => {
     st.scores = scores;

@@ -31,7 +31,7 @@ export const POST = route("reviewer", async () => {
           "You are a strict fact-checking reviewer. Decide if the SOURCE PAGE explicitly supports the CLAIM about the company. If the page could not be fetched, judge only from the search snippet and be conservative (confidence ≤ 0.6).",
         prompt: `COMPANY: ${company}\nCLAIM: ${cl.text}\nSOURCE URL: ${cl.url}\nSEARCH SNIPPET: ${cl.snippet}\n\nSOURCE PAGE ${pageText ? "TEXT" : "(could not be fetched)"}:\n${pageText ?? "-"}\n\nRELATED EVIDENCE (retrieved):\n${ev.hits.map((h) => `- [${h.score.toFixed(2)}] ${h.metadata.url}: ${h.text.slice(0, 300)}`).join("\n")}\n\nReturn {"supported": true|false, "confidence": 0.0-1.0, "quote": "exact supporting sentence from the page or empty", "note": "one line"}`,
       });
-      const verified = v.supported && v.confidence >= 0.6;
+      const verified = !!page && v.supported && v.confidence >= 0.6; // must have read the source page
       return { id: cl.id, status: verified ? ("verified" as const) : ("unverified" as const), note: `${page ? "" : "[page unreachable] "}${v.note}${v.quote ? ` — “${v.quote.slice(0, 200)}”` : ""}`, conf: v.confidence };
     } catch (e) {
       return { id: cl.id, status: "unverified" as const, note: `Reviewer error: ${(e as Error).message}`, conf: 0 };

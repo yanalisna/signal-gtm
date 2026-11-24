@@ -70,6 +70,17 @@ export interface Lead {
   linkedin?: string;
 }
 
+/** A person found on the public web who works at a target company and previously worked at a team member's past employer. */
+export interface WarmContact {
+  id: string;
+  companyId: string;
+  name: string;
+  title: string;
+  previousEmployer: string; // must match a team member's previous employer
+  url: string; // public source
+  quote: string;
+}
+
 export interface Score {
   companyId: string;
   fit: number;
@@ -80,6 +91,7 @@ export interface Score {
   whyNow: string;
   citations: string[];
   warmPath?: string[];
+  warmPathSource?: string; // public URL backing a "possible path, verify" hop
 }
 
 export interface Draft {
@@ -133,6 +145,7 @@ export interface AppState {
   claims: Claim[];
   competitors: Competitor[];
   leads: Lead[];
+  warmContacts?: WarmContact[];
   scores: Record<string, Score>;
   drafts: Draft[];
   pipeline: Record<string, Stage>;
@@ -141,4 +154,6 @@ export interface AppState {
   audit: AuditEntry[];
   usage: { leads_enriched: number; outreach_sent: number; graph_queries: number };
   localCredits: number;
+  /** leads_enriched events metered to Flexprice; subtracted from the wallet's granted credits (Flexprice has no direct debit API). */
+  flexpriceConsumed?: number;
 }

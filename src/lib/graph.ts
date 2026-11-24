@@ -92,7 +92,20 @@ export function buildGraph(s: AppState = load()) {
     const stage = s.pipeline[l.companyId];
     if (stage && stageRank.indexOf(stage) >= 2 && stage !== "Closed Lost") link(pid, "product", "REPLIED_TO");
   }
-  for (const m of loadTeamHistory().team) {
+  // Possible warm paths found on the public web (marked "possible path, verify")
+  const team = loadTeamHistory().team;
+  for (const w of s.warmContacts ?? []) {
+    const key = idToKey.get(w.companyId);
+    const emp = team.flatMap((m) => m.previous_employers).find((e) => norm(e.name) === norm(w.previousEmployer));
+    if (!key || !emp) continue;
+    const pid = "web:" + norm(w.name + w.companyId);
+    add({ id: pid, label: "Person", name: `${w.name} (${w.title}; possible path, verify)`, props: { url: w.url } });
+    link(pid, key, "WORKS_AT");
+    const empKey = companyKey(emp.name, emp.domain);
+    add({ id: empKey, label: "Company", name: emp.name });
+    link(pid, empKey, "PREVIOUSLY_EMPLOYED_AT");
+  }
+  for (const m of team) {
     const tid = "team:" + m.id;
     add({ id: tid, label: "Person", name: `${m.name} (our team)`, team: true });
     for (const e of m.previous_employers) {

@@ -37,7 +37,15 @@ export const POST = route("enrichment", async () => {
     // Credit gate: check balance server-side BEFORE every Hunter call
     const credits = await creditStatus();
     if (!credits.ok) {
-      logActivity({ step: "enrichment", message: `Blocked: no credits left (${credits.source}). Top up credits to continue.`, level: "warn" });
+      // keep the leads enriched before we ran out
+      update((st) => {
+        st.leads.push(...leads);
+      });
+      logActivity({
+        step: "enrichment",
+        message: `Enriched ${leads.length} leads, then blocked: no credits left (${credits.source}). Top up credits to continue.`,
+        level: "warn",
+      });
       throw new HttpError(402, `Top up credits — balance is ${credits.balance} (${credits.source}). ${credits.error ?? ""}`.trim());
     }
     try {
@@ -59,7 +67,7 @@ export const POST = route("enrichment", async () => {
         linkedin: best.linkedin ?? undefined,
       };
       leads.push(lead);
-      if (!cached) await meter("leads_enriched", { domain: c.domain });
+      await meter("leads_enriched", { domain: c.domain, cached: String(cached) }); // billed per lead, cache only saves our Hunter cost
       audit({ actor: "AI", action: "lead.enriched", target: c.name, detail: `${lead.title} (${v.status})${cached ? " [cache]" : ""}` });
     } catch (e) {
       skipped.push(`${c.name}: ${(e as Error).message}`);

@@ -6,7 +6,8 @@ import { load, logActivity, update, LOCAL_CREDITS_DEFAULT } from "./store";
 export type Meter = "leads_enriched" | "outreach_sent" | "graph_queries";
 
 const customerId = () => process.env.FLEXPRICE_CUSTOMER_ID || "signal-gtm-demo";
-const base = () => (process.env.FLEXPRICE_BASE_URL || "").replace(/\/$/, "");
+const base = () => (process.env.FLEXPRICE_BASE_URL || "https://us.api.flexprice.io/v1").replace(/\/$/, "");
+// Regions per docs.flexprice.io: us.api / eu.api / canada.api .flexprice.io/v1, api.cloud.flexprice.io/v1 (India)
 
 async function fp(path: string, init: RequestInit = {}) {
   const res = await fetch(base() + path, {
@@ -26,7 +27,10 @@ async function fp(path: string, init: RequestInit = {}) {
 export async function meter(event: Meter, properties: Record<string, string> = {}) {
   update((s) => {
     s.usage[event] = (s.usage[event] ?? 0) + 1;
-    if (event === "leads_enriched" && !isConfigured("flexprice")) s.localCredits = Math.max(0, s.localCredits - 1);
+    if (event === "leads_enriched") {
+      if (isConfigured("flexprice")) s.flexpriceConsumed = (s.flexpriceConsumed ?? 0) + 1;
+      else s.localCredits = Math.max(0, s.localCredits - 1);
+    }
   });
   if (!isConfigured("flexprice")) return;
   try {
@@ -59,7 +63,7 @@ async function getWallet(): Promise<Wallet | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cust: any = await fp(`/customers/external/${encodeURIComponent(customerId())}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wallets: any = await fp(`/customers/${cust.id}/wallets?include_real_time_balance=true`);
+  const wallets: any = await fp(`/customers/wallets?id=${encodeURIComponent(cust.id)}&include_real_time_balance=true`);
   const list: Wallet[] = Array.isArray(wallets) ? wallets : (wallets?.items ?? wallets?.wallets ?? []);
   return list[0] ?? null;
 }
@@ -80,7 +84,8 @@ export async function creditStatus(): Promise<CreditStatus> {
     const w = await getWallet();
     if (!w) return { source: "flexprice", balance: 0, ok: false, error: "No wallet for customer. Click 'Set up Flexprice customer'." };
     const raw = w.real_time_credit_balance ?? w.credit_balance ?? w.real_time_balance ?? w.balance ?? "0";
-    const balance = parseFloat(raw);
+    // Available = credits granted in the Flexprice wallet − leads_enriched usage we metered to Flexprice.
+    const balance = Math.max(0, parseFloat(raw) - (load().flexpriceConsumed ?? 0));
     return { source: "flexprice", balance, ok: balance > 0 };
   } catch (e) {
     return { source: "flexprice", balance: 0, ok: false, error: (e as Error).message };

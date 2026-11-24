@@ -132,7 +132,7 @@ export async function retrieveEvidence(
         .map((d) => ({ id: d.id, text: d.text, metadata: d.metadata, score: d.score ?? 0 }))
         .filter((d) => (filter ? filter(d) : true))
         .slice(0, k);
-      const latencyMs = res?.timeTakenInMs ?? Date.now() - t0;
+      const latencyMs = res?.timeTakenInMs || Date.now() - t0;
       logActivity({
         step: opts.step,
         message: `Moss retrieval ("${MOSS_INDEX}"): ${hits.length} hits, top score ${hits[0]?.score?.toFixed(3) ?? "-"}`,

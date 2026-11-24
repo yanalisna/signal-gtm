@@ -5,7 +5,7 @@ export const INTEGRATIONS = {
   tavily: ["TAVILY_API_KEY"],
   hunter: ["HUNTER_API_KEY"],
   neo4j: ["NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD"],
-  flexprice: ["FLEXPRICE_API_KEY", "FLEXPRICE_BASE_URL"],
+  flexprice: ["FLEXPRICE_API_KEY"], // FLEXPRICE_BASE_URL optional (defaults to US region)
   moss: ["MOSS_PROJECT_ID", "MOSS_PROJECT_KEY"],
 } as const;
 
