@@ -52,11 +52,17 @@ async function mossText(opts: { system: string; prompt: string; maxTokens: numbe
         { role: "system", content: opts.system + JSON_RULE },
         { role: "user", content: opts.prompt },
       ],
-      max_tokens: opts.maxTokens,
-      temperature: opts.temperature,
+      max_tokens: opts.maxTokens, // note: Moss rejects `temperature` for Claude models
     }),
   });
-  if (!res.ok) throw new Error(`Moss Inference failed (${res.status})`);
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    let msg = err.slice(0, 200);
+    try {
+      msg = JSON.parse(err).error?.message ?? msg;
+    } catch {}
+    throw new Error(`Moss Inference failed (${res.status}): ${msg}`);
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const json: any = await res.json();
   return {
