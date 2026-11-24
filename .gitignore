@@ -51,3 +51,6 @@ next-env.d.ts
 # third-party personal data (enrichment results, discovered people, demo snapshot) — never commit
 /data/demo/
 /data/*.tmp
+
+# demo video output
+/video/

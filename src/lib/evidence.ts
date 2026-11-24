@@ -55,6 +55,23 @@ export function evidenceBackend(): "moss" | "local" {
 
 let mossIndexReady = false;
 let mossLoaded = false;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mossLoading: Promise<any> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ensureLoaded(moss: any): Promise<void> {
+  // share one loadIndex() across parallel callers (concurrent loads race and fail with "index changed")
+  if (mossLoaded) return Promise.resolve();
+  if (!mossLoading)
+    mossLoading = moss
+      .loadIndex(MOSS_INDEX)
+      .then(() => {
+        mossLoaded = true;
+      })
+      .finally(() => {
+        mossLoading = null;
+      });
+  return mossLoading as Promise<void>;
+}
 
 export async function indexEvidence(docs: EvidenceDoc[]) {
   // Always keep a local copy (also used for the UI and as fallback).
@@ -81,6 +98,7 @@ export async function indexEvidence(docs: EvidenceDoc[]) {
       await moss.addDocs(MOSS_INDEX, mossDocs, { upsert: true });
     }
     mossLoaded = false; // reload so queries see the new docs
+    await ensureLoaded(moss).catch(() => {});
     logActivity({ step: "moss", message: `Moss: upserted ${docs.length} docs into "${MOSS_INDEX}"`, latencyMs: Date.now() - t0 });
   } catch (e) {
     logActivity({ step: "moss", message: `Moss indexing failed: ${(e as Error).message}`, level: "error" });
@@ -121,11 +139,17 @@ export async function retrieveEvidence(
   const t0 = Date.now();
   if (moss) {
     try {
-      if (!mossLoaded) {
-        await moss.loadIndex(MOSS_INDEX);
-        mossLoaded = true;
+      await ensureLoaded(moss);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let res: any;
+      try {
+        res = await moss.query(MOSS_INDEX, query, { topK: k * 4, alpha: 0.7 });
+      } catch (e) {
+        if (!/changed|retry/i.test((e as Error).message)) throw e;
+        mossLoaded = false; // index was updated underneath us: reload once and retry
+        await ensureLoaded(moss);
+        res = await moss.query(MOSS_INDEX, query, { topK: k * 4, alpha: 0.7 });
       }
-      const res = await moss.query(MOSS_INDEX, query, { topK: k * 4, alpha: 0.7 });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const docs: any[] = res?.docs ?? res?.results ?? res ?? [];
       const hits: EvidenceHit[] = docs
