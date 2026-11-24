@@ -47,7 +47,7 @@ export const POST = route("band", async () => {
     });
     const names = targets.map((t) => companyName(t.companyId));
     for (const t of targets) audit({ actor: "Rep", action: `draft.${verb}`, target: t.id, detail: `via Band by ${m.sender_name}` });
-    mirror({ from: m.sender_name, kind: "approval", content: m.content });
+    mirror({ from: m.sender_name, kind: "approval", content: m.content.replace(/@\[\[[^\]]+\]\]/g, "@Security") });
     bandLogActivity(`Band: ${m.sender_name} ${verb}d ${names.join(", ")} (human @mention)`);
     results.push(`${verb}d ${names.join(", ")}`);
     await say(

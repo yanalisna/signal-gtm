@@ -22,6 +22,17 @@ It is built for Physical AI and robotics sellers. The demo product is AI simulat
 | 9 | **Pipeline** | Kanban: Matched → Contacted → Replied → Meeting Booked → Closed Won/Lost. Every move records whether AI, Rep or Simulated made it, with a timestamp. A clearly labelled **Simulate replies** button. Conversion by stage and tier, and template A vs B | — |
 | 10 | **Usage billing** | Meters `leads_enriched`, `outreach_sent` and `graph_queries`. The server checks credits before every Hunter call and blocks with **Top up credits** at zero. Available credits = credits granted in the Flexprice prepaid wallet minus metered `leads_enriched` (Flexprice has no direct wallet-debit API) | Flexprice |
 
+**Band multi-agent room (optional):** four remote Band agents work in one Band room: **Planner**, **Builder**, **Reviewer** and **Security**.
+- They hand off via @mentions: Planner → Builder → Reviewer → Builder → Security → you.
+- Each one posts its working steps ("thought"/"task" events) to the room.
+- Security checks pending drafts for secrets, personal data in the body and missing citations, then @mentions the human.
+- Reply `@Security approve <company>` (or `reject <company>`, `approve all`) in Band. The app polls the room, applies the approval server-side, and records "via Band by <name>" in the audit log.
+- The **Band agents** tab mirrors the agent message stream.
+
+Setup in app.band.ai:
+1. Agents → *Connect remote agent*: create 4 agents and copy their IDs and API keys into the `BAND_*` lines in `.env.local`.
+2. Create a room and add all 4 agents to it.
+
 **Graceful degradation:** each integration is optional. If a key is missing, the step shows a clear *"X is not configured, add Y to .env.local"* message and the app keeps working:
 
 - Evidence uses a local lexical index.
