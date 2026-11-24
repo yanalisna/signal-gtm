@@ -1,5 +1,5 @@
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
-import { isConfigured, requireIntegration } from "./env";
+import { isConfigured, requireIntegration, requireLLM } from "./env";
 import { logActivity } from "./store";
 
 let client: BedrockRuntimeClient | null = null;
@@ -94,7 +94,7 @@ export async function converseJSON<T>(opts: {
     via = `Moss Inference (${MOSS_FALLBACK_MODEL}, Bedrock keys missing)`;
     out = await mossText(args);
   } else {
-    requireIntegration("bedrock"); // throws a clear MissingKeyError
+    requireLLM(); // throws a clear MissingKeyError naming Moss or Bedrock keys
     throw new Error("unreachable");
   }
   logActivity({ step: opts.step, message: `${via} call (${out.usage})`, latencyMs: Date.now() - t0 });
