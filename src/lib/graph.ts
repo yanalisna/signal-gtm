@@ -23,7 +23,8 @@ export type RelType =
   | "CONTACTED_VIA"
   | "REPLIED_TO"
   | "PREVIOUSLY_EMPLOYED_AT"
-  | "HAS_SIGNAL";
+  | "HAS_SIGNAL"
+  | "BACKED_BY";
 export interface GLink {
   source: string;
   target: string;
@@ -105,6 +106,22 @@ export function buildGraph(s: AppState = load()) {
     add({ id: empKey, label: "Company", name: emp.name });
     link(pid, empKey, "PREVIOUSLY_EMPLOYED_AT");
   }
+  // Organisation-level possible paths (e.g. target founders ex-Argo AI, which Volkswagen backed)
+  for (const w of s.warmLinks ?? []) {
+    const key = idToKey.get(w.companyId);
+    const emp = team.flatMap((m) => m.previous_employers).find((e) => norm(e.name) === norm(w.employer));
+    if (!key || !emp) continue;
+    const org = "co:" + norm(w.viaOrg);
+    add({ id: org, label: "Company", name: w.viaOrg, props: { url: w.url } });
+    const empKey = companyKey(emp.name, emp.domain);
+    add({ id: empKey, label: "Company", name: emp.name });
+    link(org, empKey, "BACKED_BY");
+    const lead = "lead:" + norm(w.companyId + w.viaOrg);
+    const cname = s.companies.find((c) => c.id === w.companyId)?.name ?? "";
+    add({ id: lead, label: "Person", name: `${cname} leadership (ex-${w.viaOrg}; possible path, verify)`, props: { url: w.url } });
+    link(lead, key, "WORKS_AT");
+    link(lead, org, "PREVIOUSLY_EMPLOYED_AT");
+  }
   for (const m of team) {
     const tid = "team:" + m.id;
     add({ id: tid, label: "Person", name: `${m.name} (our team)`, team: true });
@@ -138,7 +155,7 @@ export function buildGraph(s: AppState = load()) {
   return { nodes: [...nodes.values()], links: valid, idToKey };
 }
 
-const PATH_RELS: RelType[] = ["WORKS_AT", "PREVIOUSLY_EMPLOYED_AT"];
+const PATH_RELS: RelType[] = ["WORKS_AT", "PREVIOUSLY_EMPLOYED_AT", "BACKED_BY"];
 
 /** In-memory shortest warm path (team member → target company), max 4 hops. */
 export function warmPathLocal(g: ReturnType<typeof buildGraph>, appCompanyId: string): string[] | null {
@@ -216,7 +233,7 @@ export async function syncNeo4j(g = buildGraph()) {
 }
 
 export const WARM_PATH_CYPHER = `MATCH (t:SignalGTM:Person {team: true}), (c:SignalGTM:Company {id: $companyKey})
-MATCH p = shortestPath((t)-[:WORKS_AT|PREVIOUSLY_EMPLOYED_AT*..4]-(c))
+MATCH p = shortestPath((t)-[:WORKS_AT|PREVIOUSLY_EMPLOYED_AT|BACKED_BY*..4]-(c))
 RETURN [n IN nodes(p) | n.name] AS path
 ORDER BY length(p) ASC LIMIT 1`;
 

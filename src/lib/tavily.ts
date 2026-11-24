@@ -11,7 +11,7 @@ export interface TavilyResult {
 
 export async function tavilySearch(
   query: string,
-  opts: { maxResults?: number; topic?: "general" | "news"; days?: number } = {},
+  opts: { maxResults?: number; topic?: "general" | "news"; days?: number; depth?: "basic" | "advanced" } = {},
 ): Promise<TavilyResult[]> {
   requireIntegration("tavily");
   const t0 = Date.now();
@@ -20,7 +20,7 @@ export async function tavilySearch(
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.TAVILY_API_KEY}` },
     body: JSON.stringify({
       query,
-      search_depth: "basic",
+      search_depth: opts.depth ?? "basic",
       max_results: opts.maxResults ?? 8,
       topic: opts.topic ?? "general",
       ...(opts.days ? { days: opts.days } : {}),

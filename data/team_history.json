@@ -1,13 +1,17 @@
 {
-  "_readme": "Team members' past employers (with domains) seed the warm-intro graph. Possible warm paths to target companies are discovered from public web sources (Tavily) and always marked 'possible path, verify'. No personal contact data is stored here.",
+  "_readme": "Team members' past employers (names + domains only) seed the warm-intro graph. Possible warm paths to target companies are discovered from public web sources (Tavily) and always marked 'possible path, verify'. No personal contact data is stored here.",
   "team": [
     {
       "id": "yana",
       "name": "Yana",
       "role": "Product Manager",
       "previous_employers": [
-        { "name": "DXC Technology", "domain": "dxc.com" },
-        { "name": "Hitachi", "domain": "hitachi.com" }
+        { "name": "CARIAD", "domain": "cariad.technology" },
+        { "name": "Volkswagen Group", "domain": "volkswagen-group.com" },
+        { "name": "GlobalLogic", "domain": "globallogic.com" },
+        { "name": "Verizon", "domain": "verizon.com", "note": "C-V2X program delivered via GlobalLogic" },
+        { "name": "Teledyne LeCroy", "domain": "teledynelecroy.com" },
+        { "name": "Medtronic", "domain": "medtronic.com" }
       ],
       "contacts": []
     }

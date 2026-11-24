@@ -81,6 +81,17 @@ export interface WarmContact {
   quote: string;
 }
 
+/** Organisation-level possible path: target's leaders previously worked at `viaOrg`, which is linked to a team employer. */
+export interface WarmLink {
+  id: string;
+  companyId: string;
+  viaOrg: string;
+  relation: string; // how viaOrg relates to the employer, e.g. "backed by"
+  employer: string; // must match a team member's previous employer
+  url: string;
+  quote: string;
+}
+
 export interface Score {
   companyId: string;
   fit: number;
@@ -154,6 +165,7 @@ export interface AppState {
   competitors: Competitor[];
   leads: Lead[];
   warmContacts?: WarmContact[];
+  warmLinks?: WarmLink[];
   scores: Record<string, Score>;
   drafts: Draft[];
   pipeline: Record<string, Stage>;

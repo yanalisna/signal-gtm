@@ -10,7 +10,7 @@
 
 ### 0:00–0:15 · Hook (Intake tab)
 **Show:** the Intake tab with the product description.
-**Say:** "Selling Physical AI is hard. The buyers are a few hundred robotics and autonomy teams, and the right moment to reach them is a funding round or a hiring push. SIGNAL GTM turns one paragraph about your product into a cited, scored and human-approved pipeline."
+**Say:** "I spent 6+ years in autonomous mobility (CARIAD/Volkswagen, and Verizon C-V2X at GlobalLogic), and I saw how hard it is to sell into it. Selling Physical AI is hard. The buyers are a few hundred robotics and autonomy teams, and the right moment to reach them is a funding round or a hiring push. SIGNAL GTM turns one paragraph about your product into a cited, scored and human-approved pipeline."
 
 ### 0:15–0:35 · ICP (tab 2)
 **Click:** *2 ICP*.
@@ -27,7 +27,7 @@
 ### 1:05–1:20 · Graph (tab 4)
 **Click:** *4 Graph*.
 **Show:** the force graph and the Cypher query.
-**Say:** "Everything lands in a Neo4j knowledge graph: companies, people, signals and competitors. A Cypher shortest-path query looks for warm intros through our team's real past employers. When a path comes from the public web, it's cited and marked *possible path, verify*."
+**Say:** "Everything lands in a Neo4j knowledge graph: companies, people, signals and competitors. A Cypher shortest-path query looks for warm intros through my real past employers. It found one: Stack AV's founders ran Argo AI, which Volkswagen backed, so there's a possible path through my CARIAD/VW network. It's cited and flagged 'verify'. When a path comes from the public web, it's cited and marked *possible path, verify*."
 
 ### 1:20–1:45 · Score, enrich, credits (tab 5–6)
 **Click:** *5–6 Score & enrich*.
