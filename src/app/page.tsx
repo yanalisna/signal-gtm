@@ -74,7 +74,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-1.5">
               {Object.entries(data.integrations).map(([k, v]) => (
                 <span key={k} title={v.configured ? "Configured" : `Missing: ${v.missing.join(", ")}`}>
-                  <Badge tone={v.configured ? "green" : "amber"}>
+                  <Badge tone={v.configured ? "green" : k === "bedrock" && data.llm === "moss" ? "slate" : "amber"}>
                     {v.configured ? "●" : "○"} {INTEGRATION_LABEL[k] ?? k}
                   </Badge>
                 </span>

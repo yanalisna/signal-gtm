@@ -14,12 +14,13 @@ It is built for Physical AI and robotics sellers. The demo product is AI simulat
 | 3 | **Discovery** | Finds about 10 real companies with hiring, funding or expansion signals. Every claim stores its source URL. A negative-signal filter excludes companies with layoffs, shutdowns and similar. Includes a competitor map | Tavily + Bedrock |
 | 3b | **Reviewer agent** | Fetches each source page and asks Claude whether the page supports the claim, then marks it verified or unverified with a quote | Bedrock + Moss retrieval |
 | 4 | **Evidence index** | Every source snippet goes into the Moss index `signal-evidence`. The reviewer and the email drafts are grounded in semantic retrieval. Latency and scores appear in the *Agent thinking* panel | Moss |
+| 5a | **Possible warm paths** | Searches public web sources for people at target companies whose public bios mention a prior role at the team's past employers. Every path is cited and labelled *possible path, verify*. Nobody is contacted | Tavily + LLM |
 | 5 | **Knowledge graph** | Company, Person, Product, Competitor and Signal nodes. A Cypher shortest-path query finds warm intros through the team's real past employers | Neo4j + react-force-graph |
 | 6 | **Enrichment** | Hunter domain search and email verifier for the **top 5 leads only**, cached to disk. Each call needs credits | Hunter.io + Flexprice |
 | 7 | **Scoring** | **Fit 40 + Signal 40 + Relationship 20 = 0–100**, Tier A/B/C, plus a one-line "why now" with citations | — |
 | 8 | **Outreach** | Claude drafts a persona-matched email and one follow-up, using A/B templates. A human must approve, edit or reject each draft; the server enforces this. No real email is sent: "Sent" is an audit-log entry | Bedrock + Moss |
 | 9 | **Pipeline** | Kanban: Matched → Contacted → Replied → Meeting Booked → Closed Won/Lost. Every move records whether AI, Rep or Simulated made it, with a timestamp. A clearly labelled **Simulate replies** button. Conversion by stage and tier, and template A vs B | — |
-| 10 | **Usage billing** | Meters `leads_enriched`, `outreach_sent` and `graph_queries`. The server checks credits before every Hunter call and blocks with **Top up credits** at zero | Flexprice |
+| 10 | **Usage billing** | Meters `leads_enriched`, `outreach_sent` and `graph_queries`. The server checks credits before every Hunter call and blocks with **Top up credits** at zero. Available credits = credits granted in the Flexprice prepaid wallet minus metered `leads_enriched` (Flexprice has no direct wallet-debit API) | Flexprice |
 
 **Graceful degradation:** each integration is optional. If a key is missing, the step shows a clear *"X is not configured, add Y to .env.local"* message and the app keeps working:
 
@@ -43,16 +44,18 @@ Keys (all optional; see `.env.example`):
 
 | Integration | Variables |
 |---|---|
-| Amazon Bedrock | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` (if temporary creds), `AWS_REGION`, `BEDROCK_MODEL_ID` |
+| Amazon Bedrock (optional if Moss is set) | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` (if temporary creds), `AWS_REGION`, `BEDROCK_MODEL_ID` |
 | Tavily | `TAVILY_API_KEY` |
 | Hunter.io | `HUNTER_API_KEY` |
 | Neo4j (Aura) | `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` |
-| Flexprice | `FLEXPRICE_API_KEY`, `FLEXPRICE_BASE_URL` (e.g. `https://us.api.flexprice.io/v1`), optional `FLEXPRICE_CUSTOMER_ID` |
+| Flexprice | `FLEXPRICE_API_KEY`; optional `FLEXPRICE_BASE_URL` (defaults to US `https://us.api.flexprice.io/v1`; EU/Canada/India hosts in the Flexprice docs) and `FLEXPRICE_CUSTOMER_ID` |
 | Moss | `MOSS_PROJECT_ID`, `MOSS_PROJECT_KEY` |
 
 `.env.local` is git-ignored. Never commit it.
 
 Warm-intro paths come from `data/team_history.json`. Fill in your team's **real** past employers (with domains) and people you know.
+
+**Backup for the stage:** after a good live run, click **Save as demo** in the header. **Load demo run** restores it with no API calls. The snapshot (`data/demo/`) holds third-party contact data, so it is git-ignored and stays on this laptop.
 
 ## Demo script (about 3 minutes)
 
