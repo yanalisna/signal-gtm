@@ -1,7 +1,7 @@
-# SIGNAL GTM: demo video script (about 2.5 minutes)
+# SIGNAL GTM: demo video script (about 3 minutes)
 
 **Before recording**
-- Run `npm run dev` and open http://localhost:3000 (or :3005).
+- Run `npm run dev -- -p 3005` and open http://localhost:3005.
 - Click **Load demo run** in the header, so every tab shows the saved live run and nothing depends on Wi-Fi.
 - Keep the **Agent thinking** panel open on the right.
 - Browser zoom 110–125% so text is readable in the video.
@@ -44,13 +44,18 @@
 **Click:** *Try sending without approval* to show the red *Blocked* message.
 **Say:** "The server enforces approval, not just the UI. Approve, send, and it's in the audit log."
 
-### 2:10–2:30 · Pipeline (tab 8)
+### 2:10–2:30 · Band multi-agent room (tab "Band agents")
+**Click:** *Band agents*.
+**Show:** the agent stream (Planner → Builder → Reviewer → Security → you) and the green approval entry. Optionally switch to the Band room in app.band.ai.
+**Say:** "Behind the scenes, four Band agents (Planner, Builder, Reviewer and Security) hand off by @mention in a shared Band room. Security checks every draft for secrets and personal data, then asks me. I approve right in Band with '@Security approve Waabi', and the app records 'approved via Band' in the audit log."
+
+### 2:30–2:50 · Pipeline (tab 8)
 **Click:** *8 Pipeline*.
 **Show:** the Kanban with AI / Rep / Simulated badges, conversion by stage and tier, the A vs B templates, and Flexprice usage.
 **Say:** "Every move is timestamped as AI, Rep or Simulated. For the demo, replies are simulated and labelled that way. We track conversion by stage and tier, and A/B test the two templates."
 
-### 2:30–2:40 · Close
-**Say:** "SIGNAL GTM: real signals, verified sources, human approval, usage-based billing. Built today on AWS with Claude, Moss, Tavily, Neo4j, Hunter and Flexprice."
+### 2:50–3:00 · Close
+**Say:** "SIGNAL GTM: real signals, verified sources, human approval, usage-based billing. Built today on AWS with Claude, Moss, Tavily, Neo4j, Hunter, Flexprice and Band."
 
 ---
 

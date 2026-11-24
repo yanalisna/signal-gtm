@@ -48,7 +48,7 @@ Requirements: Node.js 20+ and npm.
 cd signal-gtm
 npm install
 cp .env.example .env.local   # then paste your own keys into .env.local
-npm run dev                  # http://localhost:3000
+npm run dev -- -p 3005       # then open http://localhost:3005
 ```
 
 Keys (all optional; see `.env.example`):

@@ -18,6 +18,7 @@
    ├── lib/hunter.ts    ──► Hunter.io domain-search + email-verifier (disk-cached)
    ├── lib/flexprice.ts ──► Flexprice events / customer / wallet / top-up
    │                       └► fallback: labelled local credit ledger
+   ├── lib/band.ts      ──► Band Agent API (4 agents post + @mention handoffs; human approves via @Security)
    └── lib/store.ts     ──► data/state.json (state, audit log, activity feed)
 ```
 
@@ -46,6 +47,14 @@
 8. **Outreach (HITL).** `/api/outreach/draft` retrieves company evidence from Moss and asks Claude for a persona-styled email and a follow-up. Template A is signal-led and template B is pain-led; they alternate. Facts are restricted to the retrieved evidence. `/api/outreach/action` is a state machine: `draft → approved → sent`, plus `rejected`/`reopen`, and an edit resets the draft to `draft`. **`send` returns 403 unless the draft is approved**, so the check holds even if the UI is bypassed. Send is simulated, written to the audit log, and metered as `outreach_sent`.
 9. **Pipeline.** Stage changes are appended to `events` with actor `AI` (initial match), `Rep` (manual move or send) or `Simulated` (the demo-only *Simulate replies* button, with probabilities by tier and template). The UI computes conversion by stage and tier, and template A vs B.
 10. **Billing.** `lib/flexprice.ts` sends `POST /events` with `event_name` ∈ {`leads_enriched`, `outreach_sent`, `graph_queries`} and `external_customer_id`. The balance comes from the customer's prepaid wallet, and the top-up button calls the wallet top-up endpoint. Metering never breaks the user flow: failures are logged, not thrown.
+
+11. **Band multi-agent room.** `lib/band.ts` calls Band's Agent REST API (`https://app.band.ai/api/v1/agent`, header `X-API-Key`), using one key per agent: Planner, Builder, Reviewer and Security.
+    - **Room:** it is resolved from `BAND_ROOM_ID`, or else the Planner's first room. `GET /chats/{id}/participants` maps agent IDs and the human to @mention handles.
+    - **Handoff:** `/api/band/run` posts the pipeline as a handoff: Planner → @Builder → @Reviewer → @Builder → @Security → @human. Each hop is a text message with a required @mention, plus a `thought`/`task` event that shows the agent's step.
+    - **Security check:** before asking the human, Security scans pending drafts for secrets, personal data in the body and missing citations.
+    - **Approval:** `/api/band/poll` reads Security's mention-scoped history (`GET /chats/{id}/context`). It takes only messages from a `User` sender that contain `approve|reject <company>` (or `all`), applies them server-side, writes `draft.approve … via Band by <name>` to the audit log, and Security confirms in the room.
+    - **Idempotency:** processed message IDs are stored, so a message is never applied twice.
+    - **Why approval is by mention:** on the free tier the human approval step is a room message, because Band's Human API is Enterprise-only.
 
 ## Design choices
 
