@@ -90,7 +90,30 @@ export default function Home() {
               </Badge>
             </span>
             <button
-              className=" inline-flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600"
+              className="text-xs text-slate-500 hover:text-indigo-600"
+              title="Snapshot the current run so it can be replayed without live API calls"
+              onClick={async () => {
+                const r = await post("/api/demo", { action: "save" });
+                alert(r.ok ? "Saved this run as the demo snapshot." : r.error);
+                await refresh();
+              }}
+            >
+              Save as demo
+            </button>
+            <button
+              className="text-xs text-slate-500 hover:text-indigo-600"
+              title="Replace current state with the saved live run (no API calls)"
+              onClick={async () => {
+                if (!confirm("Load the saved demo run? This replaces the current run.")) return;
+                const r = await post("/api/demo", { action: "load" });
+                if (!r.ok) alert(r.error);
+                await refresh();
+              }}
+            >
+              Load demo run
+            </button>
+            <button
+              className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600"
               onClick={async () => {
                 if (!confirm("Clear all companies, leads, drafts and pipeline? (Product description is kept.)")) return;
                 await post("/api/reset", { keepProduct: true });
